@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxd.worksys.dao.DeptMapper">
+    <!--Boolean delBatch(@Param("dnos") List<Integer> dnos)-->
+    <delete id="delBatch">
+        delete from dept
+        where dno in
+        <foreach collection="dnos" item="dno"
+                 open="(" close=")" separator=",">
+            #{dno}
+        </foreach>
+    </delete>
+
+    <!--Boolean insertOrUpdate(Dept dept)-->
+    <insert id="insertOrUpdate">
+        insert into dept (dno,dname)
+        values (#{dno},#{dname})
+        on duplicate key update
+        dname = values(dname)
+    </insert>
+
+    <!--List<Dept> selectDept(String dname)-->
+    <select id="selectDept" resultType="dept">
+        select dno,dname from dept
+        <where>
+            <if test="dname != null">
+                dname like concat('%',#{dname},'%')
+            </if>
+        </where>
+    </select>
+
+    <!--List<Dept> selectAllDept()-->
+    <select id="selectAllDept" resultType="dept">
+        select dno,dname from dept
+    </select>
+
+    <!--Dept selectOne(Integer dno)-->
+    <select id="selectOne" resultType="dept">
+        select dno,dname from dept
+        where dno = #{dno}
+    </select>
+</mapper>

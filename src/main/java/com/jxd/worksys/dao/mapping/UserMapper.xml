@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxd.worksys.dao.UserMapper">
+    <!--String selectPosition(User user)-->
+    <select id="selectPosition" resultType="string">
+        select position
+        from user
+        where eno = #{eno}
+          and pwd = #{pwd}
+    </select>
+
+    <!--Boolean addUser(Emp emp)-->
+    <insert id="addUser">
+        insert into user (eno,pwd,position)
+        values (#{eno},#{pwd},#{position});
+    </insert>
+
+    <!--Boolean delBatch(String[] enos)-->
+    <delete id="delBatch">
+        delete
+        from user
+        where eno in
+        <foreach collection="enos" item="eno" open="("
+                 close=")" separator=",">
+            #{eno}
+        </foreach>
+    </delete>
+
+    <!--Boolean updateUser(Emp emp)-->
+    <update id="updateUser">
+        update user
+        set pwd = #{pwd},
+            position = #{position}
+        where eno = #{eno};
+    </update>
+</mapper>

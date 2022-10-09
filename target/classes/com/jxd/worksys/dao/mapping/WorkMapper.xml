@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxd.worksys.dao.WorkMapper">
+    <!--Boolean addOrUpdateWorkRecord(Project project)-->
+    <insert id="addOrUpdateWorkRecord">
+        insert into work_record (uid,eno,date,datetime,attendance,workload,overtime,instruction,pno,status)
+        values (#{uid},#{eno},#{date},#{datetime},#{attendance},#{workload},#{overtime},#{instruction},#{pno},#{status})
+        on duplicate key update
+        eno = values(eno),date = values(date),datetime = values(datetime),
+        attendance = values(attendance),workload = values(workload),
+        overtime = values(overtime),instruction = values(instruction),
+        pno = values(pno),status = values(status)
+    </insert>
+
+    <!--IPage<Map<String,Object>> selectSelfOmission(IPage<Map<String,Object>> page,
+                                             String eno,
+                                             String date);-->
+    <select id="selectSelfOmission" resultType="map">
+        select uid, e.eno, ename,dname, date from emp e
+        left join dept d on e.dno = d.dno
+        left join work_record w on e.eno = w.eno
+        <where>
+            e.eno = #{eno}
+            <if test="date != '' and date != null">
+                and date = #{date}
+            </if>
+            and w.status = '漏报'
+        </where>
+        order by date desc
+    </select>
+
+    <!--IPage<Map<String,Object>> selectDeptOmission(IPage<Map<String,Object>> page,
+                                                 String eno,
+                                                 String date)-->
+    <select id="selectDeptOmission" resultType="map">
+        select uid, e.eno, ename,dname, date from emp e
+        left join dept d on e.dno = d.dno
+        left join work_record w on e.eno = w.eno
+        <where>
+            d.dno = (select dno from emp where eno = #{eno})
+            <if test="date != '' and date != null">
+                and date = #{date}
+            </if>
+            and status = '漏报'
+        </where>
+        order by date desc
+    </select>
+
+    <!--Boolean addOmission-->
+    <insert id="addOmission">
+        insert into work_record (eno,date,status) select eno,date(now()),'漏报' status
+        from emp
+        where eno not in (select e.eno from emp e
+            left join work_record w on e.eno = w.eno
+            where to_days(date) = to_days(now()))
+    </insert>
+
+    <!--List<Map<String,Object>> selectRecordsByEno(String eno,String status);-->
+    <select id="selectRecordsByEno" resultType="map">
+        select uid,e.eno,ename,date,attendance,workload,overtime,instruction,w.pno,pname,status
+        from work_record w
+            left join project p on w.pno = p.pno
+            left join emp e on w.eno = e.eno
+        <where>
+            e.eno = #{eno}
+            and status = #{status}
+        </where>
+    </select>
+
+    <!--List<Map<String,Object>> selectNotAudit(String eno)-->
+    <select id="selectNotAudit" resultType="map">
+        select date,count(uid) as num from work_record w
+            left join emp e on w.eno = e.eno
+        where status = '未审核' and dno = (select dno from emp where emp.eno = #{eno})
+        group by date;
+    </select>
+
+    <!--IPage<Map<String,Object>> selectSelfRecord(IPage<Map<String,Object>> page,
+                                               String eno,
+                                               String date,
+                                               String year,
+                                               Integer pno);-->
+    <select id="selectSelfRecord" resultType="hashmap">
+        select ename,date,attendance,workload,overtime,pname,instruction,status
+        from work_record w
+            left join emp e on w.eno = e.eno
+            left join project p on w.pno = p.pno
+        <where>
+            w.eno = #{eno}
+            <if test="date != '' and date != null">
+                and w.date = #{date}
+            </if>
+            <if test="pno != 0">
+                and w.pno = #{pno}
+            </if>
+            <if test="year != '' and year != null">
+                and YEAR(w.date) = #{year}
+            </if>
+        </where>
+        order by date desc
+    </select>
+
+    <!--    IPage<Map<String,Object>> selectDeptRecord(IPage<Map<String,Object>> page,
+                                               String eno,
+                                               String ename
+                                               String startDate,
+                                               String endDate);-->
+    <select id="selectDeptRecord" resultType="hashmap">
+        select ename, dname, date, datetime,
+            attendance, overtime, pname, status
+        from work_record w
+            left join project p on w.pno = p.pno
+            left join emp e on w.eno = e.eno
+            left join dept d on e.dno = d.dno
+        <where>
+            e.dno = (select dno from emp where emp.eno = #{eno})
+            <if test="ename != null">
+                and ename like concat('%',#{ename},'%')
+            </if>
+            <if test="startDate != '' and startDate != null">
+                and date >= #{startDate}
+            </if>
+            <if test="endDate != '' and endDate != null">
+                and date &lt;= #{endDate}
+            </if>
+        </where>
+        order by date desc
+    </select>
+
+    <!--Map<String,Object> selectRecordByEnoAndDate(Map<String,String> queryMap);-->
+    <select id="selectRecordByEnoAndDate" resultType="hashmap">
+        select uid,status from work_record
+        where eno = #{eno}
+            and date = #{date}
+    </select>
+
+    <!--IPage<Map<String,Object>> selectNotAuditRecordByPage(IPage<Map<String,Object>> page,
+                                                   String mgrEno,
+                                                   String date,
+                                                   String eno,
+                                                   String ename);-->
+    <select id="selectNotAuditRecordByPage" resultType="hashmap">
+        select uid,w.eno,ename,dname,date,attendance,workload,overtime,pname
+        from work_record w
+            left join project p on w.pno = p.pno
+            left join emp e on w.eno = e.eno
+            left join dept d on e.dno = d.dno
+        <where>
+            d.dno = (select dno from emp where emp.eno = #{mgrEno})
+            <if test="eno != null and eno != ''">
+                and e.eno = #{eno}
+            </if>
+            <if test="ename != null and ename != ''">
+                and ename like concat('%',#{ename},'%')
+            </if>
+            <if test="date != '' and date != null">
+                and date = #{date}
+            </if>
+            and status = '未审核'
+        </where>
+        order by date desc
+    </select>
+
+    <!--Boolean updateStatus(List<String> uids,String status)-->
+    <update id="updateStatus">
+        update work_record
+        set status = #{status}
+        where uid in
+        <foreach collection="uids" item="uid" open="(" close=")" separator=",">
+            #{uid}
+        </foreach>
+    </update>
+</mapper>

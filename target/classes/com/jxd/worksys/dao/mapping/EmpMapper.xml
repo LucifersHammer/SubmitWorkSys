@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxd.worksys.dao.EmpMapper">
+    <!--Boolean addEmp(Emp emp)-->
+    <insert id="addEmp">
+        insert into emp (eno, ename, sex, phoneNumber, dno)
+        values (#{eno}, #{ename}, #{sex}, #{phoneNumber}, #{dno});
+    </insert>
+
+    <!--Boolean delBatch(String[] enos)-->
+    <delete id="delBatch">
+        delete from emp
+        where eno in 
+        <foreach collection="enos" item="eno" open="("
+                 close=")" separator=",">
+            #{eno}
+        </foreach>
+    </delete>
+
+    <!--Boolean updateEmp(Emp emp)-->
+    <update id="updateEmp">
+        update emp
+        set ename = #{ename},
+            sex = #{sex},
+            phoneNumber = #{phoneNumber},
+            dno = #{dno}
+        where eno = #{eno};
+    </update>
+
+    <!--IPage<Map<String,Object>> getAllEmpList(IPage<Map<String,Object>> page,
+                                             String ename,
+                                             Integer dno);-->
+    <select id="getAllEmpList" resultType="map">
+        select e.eno,ename,sex,phoneNumber,dname,position,pwd from emp e
+        left join dept d on e.dno = d.dno
+        left join user u on e.eno = u.eno
+        <where>
+            <if test="ename != null">
+                ename like CONCAT('%',#{ename},'%')
+            </if>
+            <if test="dno != null">
+                and e.dno = #{dno}
+            </if>
+        </where>
+    </select>
+
+    <!--Map<String,Object> selectByEno(String eno)-->
+    <select id="selectByEno" resultType="map">
+        select e.eno,ename,sex,phoneNumber,dno,pwd,position from emp e
+        left join user u on e.eno = u.eno
+        where e.eno = #{eno}
+    </select>
+
+    <!--Integer[] selDno()-->
+    <select id="selDno" resultType="integer">
+        select distinct dno from emp
+    </select>
+</mapper>

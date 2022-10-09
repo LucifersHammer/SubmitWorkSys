@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxd.worksys.dao.ProjectMapper">
+    <!--List<Project> selectProject(String eno)-->
+    <select id="selectProject" resultType="project">
+        select pno,pname from project
+        <where>
+            dno = (select dno from emp where eno = #{eno})
+        </where>
+    </select>
+
+    <!--Integer[] selDno()-->
+    <select id="selDno" resultType="integer">
+        select distinct dno from project
+    </select>
+</mapper>
