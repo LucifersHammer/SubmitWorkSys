@@ -10,6 +10,7 @@ import com.jxd.worksys.utils.IDUtil;
 import com.jxd.worksys.vo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ public class EmpServiceImpl implements IEmpService {
     private EmpMapper empMapper;
     @Autowired
     private UserMapper userMapper;
+
     @Override
     public String login(User user) {
         return userMapper.selectPosition(user);
@@ -40,6 +42,7 @@ public class EmpServiceImpl implements IEmpService {
      * @return
      */
     @Override
+    @Transactional
     public Boolean addEmp(Emp emp) {
         //指定eno
         emp.setEno(IDUtil.getID());
@@ -53,6 +56,7 @@ public class EmpServiceImpl implements IEmpService {
      * @return
      */
     @Override
+    @Transactional
     public Boolean delBatch(List<String> enos) {
         return empMapper.delBatch(enos) && userMapper.delBatch(enos);
     }
@@ -64,6 +68,7 @@ public class EmpServiceImpl implements IEmpService {
      * @return
      */
     @Override
+    @Transactional
     public Boolean editEmp(Emp emp) {
         return empMapper.updateEmp(emp) && userMapper.updateUser(emp);
     }
